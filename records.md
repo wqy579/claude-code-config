@@ -23,3 +23,5 @@
    - 后果：前端自动带出件价 57600 而非 480 → 后端按 57600 记金额（本该 750）→ 金额污染。
    - **正确改法**：回滚 F1 的 4 处（恢复物理口径），只修 OLD 的 `onLarge.price_medium`；F2（批量多选）保留。`requiredSmall`(=膨胀 c*mc，与后端 quantity 一致但对比物理库存会 120× 误拦) 是**既有的独立问题**，本次不擅自改，单独立项。
    - token：已写入 `~/.config/gh/hosts.yml`（scope `repo, workflow`，缺 `read:org` 仅影响 `gh auth login` 校验，不影响 API）；PR #4 已存在且 Tests 8 项全绿，但结论是**先修回归再合**。
+   - 修正 commit `2e8b5ba`（回滚 F1 4 处 + 修 `onLarge.price_medium`、保留 F2）推送后 PR #4 Tests 重跑全绿；**squash 合并 #4 → main `96ddefe`**（17:58Z），Build & Deploy run `35459699645` 全绿（`Deploy on server: success`），**线上 `bd23fbb`→`96ddefe` 已部署上线**。
+   - 遗留：`requiredSmall`/后端 `itemQuantity` 的三单位膨胀口径 `c*mc`（对比物理库存会 mc× 误拦）是独立既有问题，未改，单独立项；前端价格逻辑无单测，建议补。
