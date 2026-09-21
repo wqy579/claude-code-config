@@ -25,3 +25,53 @@
    - token：已写入 `~/.config/gh/hosts.yml`（scope `repo, workflow`，缺 `read:org` 仅影响 `gh auth login` 校验，不影响 API）；PR #4 已存在且 Tests 8 项全绿，但结论是**先修回归再合**。
    - 修正 commit `2e8b5ba`（回滚 F1 4 处 + 修 `onLarge.price_medium`、保留 F2）推送后 PR #4 Tests 重跑全绿；**squash 合并 #4 → main `96ddefe`**（17:58Z），Build & Deploy run `35459699645` 全绿（`Deploy on server: success`），**线上 `bd23fbb`→`96ddefe` 已部署上线**。
    - 遗留：`requiredSmall`/后端 `itemQuantity` 的三单位膨胀口径 `c*mc`（对比物理库存会 mc× 误拦）是独立既有问题，未改，单独立项；前端价格逻辑无单测，建议补。
+
+4. **销售单弹窗三栏商品表格宽度收敛（去掉第三栏横向滚动条）** — 2026-09-21
+   - 文件：`laradmin/frontend/src/views/business/components/sales-order-dialog.vue`（+5/−3）
+   - 上一笔 `c219b7f` 把对话框 `1280px→96%`、`.cat-col` `150→128px`，量纲只算到 1920（items-wrap≈1490）/1440（≈1082）两档，但表格 `min-width:1040px` 是写死的——**1366 常规屏 items-wrap ≈986px < 1040px，必然出横向滚动条**，即「框不够大」的真正漏档。
+   - 改法（三处各让一点，1366 屏合计多出 ~160px）：
+     - `width="96%"→"98%"`：1366 屏 +27px
+     - `.cat-col flex: 0 0 128px→112px`：两栏分类共 +32px 让位
+     - `.items-table min-width: 1040px→920px`：10 列各列宽相加 ≈1050px，压到 920 后由 `width:100%` 均分缩排，弹性列自动让位不挤烂
+   - 改后 1366 屏 items-wrap ≈1045px > 920px 滚动条消失；1920 屏 ≈1567px 充裕；移动端受 `responsive.css` 的 `--el-dialog-width:95vw !important` 管，不受影响
+   - 验证：`npm run build ✓`（1m9s）；新产物 `sales-order-dialog-BeUh0Fx-.js`（含 `width:"98%"`）/ `sales-order-dialog-BrAjUtn3.css`（含 `112px`、`920px`）已落 `public/admin/`
+   - 提交 `4198c23` 直推 `origin main`；Build & Deploy run `35611067993`
+
+   ⚠️ **用户反馈「没变化」→ 确诊改动量太小，垂直方向才是真问题**
+   - chromium headless 实测（结构样式与 vue 组件一致的最小复现）：`98%/112px/920px` 下 1280/1366/1440/1536/1600/1920 六档屏**全部无横向滚动条**（1366 屏商品栏 1079px = 表格需要 1079px，`scrollWidth===clientWidth`）。功能上对，但 96→98% 在 1366 只多 27px、128→112px 多 32px，**合计 59px 肉眼无感**。
+   - 真因在垂直：默认 `--el-dialog-margin-top:15vh` 把整窗顶到中上部、下方留大片空白；`.cat-picker` 又写死 `height:46vh`（800 高窗口仅 368px）。两处叠加让表格区永远撑不满屏幕。
+   - 改法：`el-dialog` 加 `top="2vh"` + `.sales-order-dialog{margin-bottom:2vh}` 顶掉 15vh 上边距和 50px 下边距；`el-dialog__body` 改 `display:flex column + overflow:hidden`，`.cat-picker` 从 `height:46vh` 改 `flex:1 1 auto + min-height:0`，高度按剩余空间分配。
+   - 实测收益：1366×800 三栏区 **368px→738px（多一倍可视行数）**；1920×800 738→729px；横向仍无滚动条（`h:false`）。
+   - 提交 `7c34da7` 直推 `origin main`；Build & Deploy run `35612995112`
+   - 教训：「把框放大」这类诉求，先量出改动像素差——59px 在 1366 屏是 4% 视口，用户当然看不出。垂直方向的空白比水平方向的 59px 值钱得多。
+
+   ⚠️⚠️ **7c34da7 那条「实测收益」是错的——用户「没变化」是对的。已回滚思路、真修（commit `524bf0b`）**
+   - 7c34da7 用的复现页是**无 scoped 的裸 HTML**，把组件 CSS 抄过去量，量出来「368→738px」就算成功并部署了。真实组件里那些选择器是 **scoped** 的，行为完全不同。
+   - 真因：**Vue scoped CSS 的 hash 加在「最后一个选择器」上，不是锚点上**。`el-dialog` 的根节点由 Element Plus 拥有并 teleport 到 `body`，拿不到本组件的 `data-v` hash，于是
+     - `.sales-order-dialog { margin-bottom: 2vh }` → 编译成 `.sales-order-dialog[data-v-x]{…}` → **永不匹配**（实测 `margin-bottom` 一直 `50px`）
+     - `.sales-order-dialog :deep(.el-dialog__body) { display:flex }` → 编译成 `.sales-order-dialog[data-v-x] .el-dialog__body{…}` → **永不匹配**（实测 body 一直 `display:block`）
+     - 活体证据：`.cat-picker` 有 `data-v-1ec1f9b6` 且生效（cyan），同一条 `<style>` 块里的 `.sales-order-dialog` / `.el-dialog__body` **一个 data-v 属性都没有**。
+     - 对照实验：把选择器锚到本地 wrapper `.local-wrap` 上 → 绿框生效；锚在 `.outer-only`（直接挂 el-dialog）上 → 无效果。
+   - 连带后果：对话框**固定 869px（按内容撑高，与视口无关）**，不是「顶到中上部」。1280/1366/1440/1536 六档屏量出来全是 869px，上一轮所有屏幕的「撑满」数据都是假的。
+   - 正确改法：模板里包一层本组件自己渲染的 `<div class="so-dialog">` 作 scoped 锚点，两条 `:deep` 规则挂上去；并给对话框与正文**显式** `height: calc(96vh)` / `calc(96vh - 4vh - 56px)`——不给明确高度时 body 仍按内容撑高，`flex:1` 的子项永远拿不到剩余空间。
+   - 改后实测（真实组件经 Vite dev 编译 + 真 Element Plus，60 行订单）：
+     - 1280×800：body 680px、表格可视 **530px**、横向滚动条无
+     - 1366×768：body 651px、表格可视 **501px**、横向滚动条无
+     - 1920×1080：对话框 **1037px**（= 96vh，修前固定 869px）、表格可视 **788px**
+   - 提交 `524bf0b` 直推 `origin main`；`npm run build ✓`（25s），新产物 `sales-order-dialog-CNd9OuYX.js` / `sales-order-dialog-BdIU-ajg.css`（含 `.so-dialog[data-v-48460b5d]` 两条规则）已落 `public/admin/`。
+   - **教训（本轮最重要）**：验证 scoped 组件时，**复现页必须走真实编译链（Vite dev + 真实组件）**，抄 CSS 到裸 HTML 会静默丢掉 scoping，量出来的数字全是假的——这轮连错两轮就是因为这么量。另外凡是作用在「第三方组件根节点」上的 `:deep` 规则，先确认那条链上有一个自己渲染的元素。
+
+3. **销售单弹窗加载/分类/库存/状态机对齐收尾（PR #5–#10）** — 2026-09-21
+   - 背景：#4 的三单位换算 + 批量多选虽已部署，但线上开弹窗后**主分类列空白「无分类」**，三单位/多选实际无法操作；此轮 #5–#10 逐个排障收尾，全部已 squash 合并入 laradmin `main`。
+   - **#5 弹窗打开不加载分类/库存（+2/−1，`sales-order-dialog.vue`）**：父 `sales-order/index.vue` 用 `v-if="dialog.order"` 挂载弹窗，挂载时 `visible` 已 true；dialog 初始化 watch 非 immediate，`v-if` 每次全新挂载永远看不到 false→true 变化 → `loadCategories`/`loadStock` 永不自动跑（`onMounted` import 了但从未调用，无兜底）。修：watch 加 `{ immediate: true }`。不含 `fix/sales-order-dialog-unit-conversion` 分支 `2e8b5ba` 的回滚膨胀口径改动（独立发布决定）。
+   - **#6 回填 is_main + 加 external_id（+88/−0，3 个迁移）**：`2026_09_03 add_category_levels` 给 `product_categories.is_main` 加 `default(false)` 但**没回填**，迁移首次跑把所有顶级分类刷成非主分类 → 分类接口 `where is_main=true` 返空 → 三栏「无分类」真因。`000003` 回填 `is_main=true`（`parent_id IS NULL AND is_main=false`，幂等）。`000001/000002` 给 products(联凯 cpid)/product_categories(联凯 qtbm) 加 `external_id` + 索引。**部署待核实**：deploy.yml 是否含 `php artisan migrate`。
+   - **#7 000002 幂等化，修生产 Duplicate column（+22/−8，1 个迁移）**：#6 合并后部署失败（run `35489758621` `conclusion=failure`），「无分类」仍未修。根因：`artisan migrate --force` 生产库跑到 `000002` 报 `SQLSTATE[42S21] Column already exists: 1060 Duplicate column name 'external_id'`——**生产库 `product_categories` 已有 `external_id` 列**（CI fresh 库没有 → #6 CI 全绿假象），重复加列 → migrate 中断 → `000003` 没跑 → is_main 未回填。修：`000002` 改 `hasColumn`/`hasIndex` 判断，列已存在则只补索引。**教训：CI fresh 库 ≠ 生产库 schema，加列迁移必须幂等。** 修后 migrate 跑通 → `000003` 执行 → 顶级分类 `is_main=true` 回填 → 三栏恢复分类。
+   - **#8 immediate watch TDZ 崩溃（+13/−13，`sales-order-dialog.vue`）**：#5 加 immediate 后弹窗打开即崩 `ReferenceError: Cannot access 'He' before initialization`（minified TDZ）。根因：immediate 让回调在 setup 执行到 `watch()` 那行时**同步触发**，但回调引用的 `loadSalesmen()`/`salesmen` 声明在 watch **之后**（源码 746 watch / 795 salesmen / 797 loadSalesmen）→ TDZ。修：把 `const salesmen` 与 `const loadSalesmen` 移到 watch 之前，watch 位置不动。**教训：immediate watch 的回调依赖必须在 watch 之前声明。** `public/admin/` 为 gitignore 构建产物，服务器侧需重新构建。
+   - **#9 下单即冻结库存对齐 + 操作日志 + 库存同步补缺（+509/−127，6 文件）**：
+     - 后端对齐旧系统：下单即 `pending` + 即冻结库存 + approve 作废。
+     - 补缺①`products.stock_qty` 同步：`StockService` 的 `stockIn/stockOut/freeze/unfreeze` 四处写操作后统一重算 `products.stock_qty = SUM(stocks.quantity)`（该列 `create_business_tables:56` 就在但运行时无人维护，僵尸字段）。
+     - 补缺②`order_operation_logs` 操作日志：新建 migration（对齐旧系统字段，补全旧系统漏建的 6 列）+ `logOperation()`，store/update/cancel/destroy 写入，show 带出操作历史；新系统此前只有请求级 `system_log`，缺业务级单据操作流水。
+     - 前端：三栏分类按商品数降序。
+     - 测试：136 tests / 771 assertions 绿（+5 +26，无回归）。
+   - **#10 第三栏改纯商品输入框（+48/−39，`sales-order-dialog.vue`）**：三栏只保留 主分类/子分类/商品输入框，删第三栏下方商品结果列表。第三栏换 `el-autocomplete`：输入名/编码/规格 → 下拉匹配（名称/规格/单价）→ 选中填入表格空行并清空。删 `pickerProducts`/`filterPickerProducts` 等，新增 `queryPickerProducts`/`onPickSuggestion`。
+   - **遗留/未做项**：① #4 既有的 `requiredSmall`/后端 `itemQuantity` 三单位膨胀口径 `c*mc`（对比物理库存会 mc× 误拦）仍未改，独立既有问题，单独立项；② #9 的状态机后续流程——旧系统完整链 `pending→picking→transferred→shipped→delivered→completed` + 完整撤销链跨 5 个 Controller（SalesOrder/Dispatch/Delivery/SalesReturn/Payment），新系统 schema 状态值 `draft/pending/approved/completed/cancelled` 与旧 `transferred/shipped/delivered` 对不上，是状态模型重设计而非补缺；半截状态机（只做 picking 不到 delivered）会让冻结库存转不出实扣、卡在库存不一致态，比没有更危险，单独排期；③ 前端价格/换算逻辑仍无单测（#4 已建议），未补。
