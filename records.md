@@ -1,5 +1,32 @@
 # 记录
 
+6. **销售单弹窗商品格改行内搜索下拉（对齐旧系统新增订单）** — 2026-09-28
+   - 文件：`laradmin/frontend/src/views/business/components/sales-order-dialog.vue`（+219/−212）
+   - 背景：上一笔 `a92f078` 把第三栏做成独立 multi-pick 复选框面板（搜索框 + 全选/已选/添加/清空工具条 + 下方双栏复选框列表），与旧系统新增订单页「每行商品格内搜索 + 下拉勾选」不一致；此笔对齐旧系统。
+   - 改法：删独立 multi-pick 面板（`.multi-pick*`/`.pick-*` 样式 + `pickerMulti`/`searchPickerProducts`/`addPickedProducts`/`toggleAllPicker`/`onPickSearch`/`resetPickerMulti` 等），每行商品格换 `.prod-cell`：
+     - 搜索输入 `.prod-search`（已选商品 readonly 显示名 + ✕ 重选）+ 下拉建议 `.prod-suggestions`；每条建议带 checkbox，勾选即填「搜索行起的第一个空行」（没有则在搜索行后插新行）、取消即清该行回空行；下拉顶部「全选添加」一键把全部建议商品铺成新行（跳过已在单中的）。
+     - 新增 `onProdInput/onProdFocus/onProdBlur/onProdSuggEnter/onProdSuggLeave/refreshOpenSuggestions/toggleProductCheck/selectAllProducts/clearProductFromRow`；删 `onProductChange`（el-select 已移除）。
+     - `blankRow` 增 `showSuggestions/checkedProducts/_blurTimer/_suggHover/_prevOptions`；`searchProducts` 用 `_prevOptions` 同步勾选态（翻页/重搜不丢勾、已在单中商品标勾）。
+   - 收尾（本会话补的几处）：
+     - 模板缩进错位：删 multi-pick 块时把 `<div class="items-table-scroll">` 与注释跌到 1 tab（同级/子节点都在 4 tab），已还原 4 tab、开合对齐；并删商品 `<td>` 内 3 行残留空行。
+     - 删死代码 `productLabel`（原只服务已删的 el-option `:label`，全文件再无引用）。
+     - `saveDraft` 只剥了旧 3 个瞬态字段（`_loading/_searchKeyword/_options`），新加的 `showSuggestions/checkedProducts/_blurTimer/_suggHover/_prevOptions` 全被序列化进 localStorage——`_prevOptions` 是完整商品对象数组胀配额、`_suggHover=true` 重载后会让首次失焦关不掉下拉；改 `saveDraft` 剥全瞬态字段、`loadDraft` 补齐 `_blurTimer/_suggHover` 重置兜底旧草稿。
+   - 验证：`npm run build ✓`（45s）；新产物 `sales-order-dialog-PGs2HuCy.js`（23.07 kB）已落 `public/admin/`；悬空引用审计：已删符号无残留。
+   - 提交 `642e30d` 直推 `origin main`；Tests run `36390938388` ✓（3m31s）、Build & Deploy run `36390938358` ✓（3m56s，success），线上已部署上线。
+   - 遗留：前端商品/换算逻辑仍无单测（#4 既留），本笔未补。
+
+5. **销售单弹窗三栏高度限定（20 行），收敛对话框高度** — 2026-09-21
+   - 文件：`laradmin/frontend/src/views/business/components/sales-order-dialog.vue`（+23/−16）
+   - 现象：「新增销售订单」框非常高。三栏（主分类/子分类/商品表格）之前 `.cat-picker` 用 `flex:1 1 auto` 按对话框剩余空间撑高，分类列无上限；对话框本身又写死 `height:96vh` 顶满整屏，body 再扣标题栏算高度，三栏被拉到占满整个剩余视口。
+   - 改法：三栏限定为「输入框 20 行」高，对话框随之收敛
+     - `.cat-picker`: `flex:1 1 auto` → `height:680px`（20 行 × 31px + 表头 34 + 内边距 ≈ 680），三栏同高对齐
+     - `.cat-col`: 补 `height:100%` + `min-height:0`，确保撑满父容器（flex 子项要显式 `min-height:0` 才能收缩）
+     - `.items-wrap`: 补 `min-height:0`，flex 子项正常收缩
+     - `el-dialog`: 去掉写死的 `height:calc(96vh)`，改 `max-height:96vh + overflow:auto` 按内容撑高；body 去掉显式高度，由「表单 + 三栏(定高) + 合计」自然得出
+   - 验证：`npm run build ✓`（1m5s）；新产物 `sales-order-dialog-D9Dcmd43.css` 含 `cat-picker{height:680px}`
+   - 提交 `0b947cd` 直推 `origin main`
+   - 教训：`flex:1` 撑高在「无内容上限的分类列」上必然把对话框顶满；要限高就得从「父容器按内容撑」这条链上同时改，只改 `.cat-picker` 不动 `el-dialog` 的 96vh 会在下方留大片空白。
+
 1. **1+1=2** — 2026-09-14 17:19
 
 2. **销售单弹窗三单位换算修正 + 批量多选** — 2026-09-19 16:01
