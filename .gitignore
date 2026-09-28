@@ -2,6 +2,7 @@
 .claude
 .gemini
 .opencode
+.monkeycode
 
 # IDE and Editors
 **/.idea/
@@ -110,6 +111,9 @@
 **/.env.*.local
 *.pem
 *.key
+# 本地工作区文档，含明文凭证（DB 密码 / 后台账号），禁止入库
+red.md
+task_*.json
 
 # Temporary files
 *.tmp
