@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "defaultMode": "default",
+    "allow": [
+      "Bash(*)",
+      "Read(*)",
+      "Edit(*)",
+      "Write(*)",
+      "MultiEdit(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "WebFetch(*)",
+      "WebSearch(*)",
+      "Task(*)",
+      "Agent(*)",
+      "TodoWrite(*)",
+      "Mcp(*)",
+      "Notify(*)",
+      "Question(*)",
+      "Skill(*)"
+    ],
+    "deny": []
+  },
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://apihub.agnes-ai.cn",
+    "ANTHROPIC_AUTH_TOKEN": "sk-gN07qfrBHlXFKcd63PZOr8Dy5eMHDy2TkTrdkgfreTd31B5E",
+    "ANTHROPIC_MODEL": "agnes-2.0-flash",
+    "ANTHROPIC_SMALL_FAST_MODEL": "agnes-2.0-flash"
+  },
+  "theme": "dark"
+}
