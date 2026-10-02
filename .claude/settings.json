@@ -25,7 +25,7 @@
     "ANTHROPIC_BASE_URL": "http://127.0.0.1:8317",
     "ANTHROPIC_AUTH_TOKEN": "local-chatweb-key",
     "ANTHROPIC_MODEL": "glm-5.2",
-    "ANTHROPIC_SMALL_FAST_MODEL": "sensenova-6.8-flash-lite",
+    "ANTHROPIC_SMALL_FAST_MODEL": "glm-4.7-flash",
     "ANTHROPIC_MAX_RETRIES": "1",
     "CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT": "1"
   },
