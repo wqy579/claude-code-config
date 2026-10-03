@@ -16,7 +16,7 @@ const { join } = require('path');
 
 const WORKDIR = '/workspace';
 const CLAUDE_BIN = '/usr/local/bin/claude';
-const PORT = 3001;
+const PORT = 8317;
 const TIMEOUT_MS = 30 * 60 * 1000;
 const JOB_TTL_MS = 45 * 60 * 60 * 1000;
 const MAX_RETRIES = 12;

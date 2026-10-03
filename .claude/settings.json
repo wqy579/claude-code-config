@@ -1,33 +1,33 @@
 {
-  "permissions": {
-    "defaultMode": "default",
-    "allow": [
-      "Bash(*)",
-      "Read(*)",
-      "Edit(*)",
-      "Write(*)",
-      "MultiEdit(*)",
-      "Glob(*)",
-      "Grep(*)",
-      "WebFetch(*)",
-      "WebSearch(*)",
-      "Task(*)",
-      "Agent(*)",
-      "TodoWrite(*)",
-      "Mcp(*)",
-      "Notify(*)",
-      "Question(*)",
-      "Skill(*)"
-    ],
-    "deny": []
-  },
-  "env": {
-    "ANTHROPIC_BASE_URL": "http://127.0.0.1:8317",
-    "ANTHROPIC_AUTH_TOKEN": "local-chatweb-key",
-    "ANTHROPIC_MODEL": "glm-5.2",
-    "ANTHROPIC_SMALL_FAST_MODEL": "glm-4.7-flash",
-    "ANTHROPIC_MAX_RETRIES": "1",
-    "CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT": "1"
-  },
-  "theme": "dark"
+    "permissions": {
+        "defaultMode": "default",
+        "allow": [
+            "Bash(*)",
+            "Read(*)",
+            "Edit(*)",
+            "Write(*)",
+            "MultiEdit(*)",
+            "Glob(*)",
+            "Grep(*)",
+            "WebFetch(*)",
+            "WebSearch(*)",
+            "Task(*)",
+            "Agent(*)",
+            "TodoWrite(*)",
+            "Mcp(*)",
+            "Notify(*)",
+            "Question(*)",
+            "Skill(*)"
+        ],
+        "deny": []
+    },
+    "env": {
+        "ANTHROPIC_BASE_URL": "http://127.0.0.1:8318",
+        "ANTHROPIC_AUTH_TOKEN": "local-chatweb-key",
+        "ANTHROPIC_MODEL": "glm-5.2",
+        "ANTHROPIC_SMALL_FAST_MODEL": "agnes-2.5-flash",
+        "ANTHROPIC_MAX_RETRIES": "1",
+        "CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT": "1"
+    },
+    "theme": "dark"
 }
