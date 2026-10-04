@@ -47,6 +47,7 @@ const TOKEN_POOL = (process.env.SENSENOVA_TOKENS ? process.env.SENSENOVA_TOKENS.
   'sk-P4l1zSAGwLif4LnOzAtKhorVej5L1uT4',
   'sk-zXAlbixlfWXxXjUWRso9qC1m3DYB4ajk',
   'sk-6HqcznSf6agPXoGkh8dRvbFBWuesMxHT',
+  'sk-IExrpMRrKsXBxxRCo6X62t7oviAWEeIH',
 ]).map(s => s.trim()).filter(Boolean);
 
 const SENSENOVA_BASE_URL = 'https://token.sensenova.cn';
