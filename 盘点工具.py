@@ -60,8 +60,8 @@ while retries < max_retries:
     firefox_options.add_argument("--width=460")
     firefox_options.add_argument("--height=860")
     driver = webdriver.Firefox(options=firefox_options)
-    url = f"http://pandian.jzj.cn/pandian/MDH00103/OP100015/index?userid={selected_userid}"  
-    driver.get(url)  
+    base_url = f"http://pandian.jzj.cn/pandian/MDH00103/OP100015/index?userid={selected_userid}"
+    driver.get(base_url)
     time.sleep(2)
 
 
@@ -315,14 +315,9 @@ while retries < max_retries:
 
         except  Exception as e: 
             print(f"没有需要盘点的东西")   
-
-            # 再次后退一步
-            time.sleep(1)
-            print('后退一步')  
-            driver.back()
-            time.sleep(1)
-            print('后退一步')  
-            driver.back()
+            print('返回分类列表页')
+            driver.get(base_url)
+            time.sleep(3)
             return False
             
 
@@ -397,9 +392,8 @@ while retries < max_retries:
                         if nocut_count==0:
                             print("可盘点数量为0，正在结束循环，退回上一步")
                             time.sleep(5)
-                            driver.back()
-                            time.sleep(5)
-                            driver.back()
+                            driver.get(base_url)
+                            time.sleep(3)
                             continue
                         
                         else:
