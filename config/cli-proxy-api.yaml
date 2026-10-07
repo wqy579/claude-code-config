@@ -1,0 +1,71 @@
+config-version: 8
+server:
+  host: "0.0.0.0"
+  port: 8317
+access:
+  api-keys:
+    - "local-claude-code-key"
+    - "x-api-key"
+management:
+  secret-key: "$2a$10$gO/jCWlnNBCGxcER58bzUOrei77SJJA05BnbdvQ3cB9sJll.07s7u"
+  allow-remote: true
+routing:
+  retry:
+    request-retry: 3
+request-log: true
+requests:
+  timeout: 600s
+  max-idle-conns: 1000
+  max-idle-conns-per-host: 500
+api-keys:
+  openai-compatibility:
+    - name: "nvapi"
+      base-url: "https://integrate.api.nvidia.com/v1"
+      models:
+        - name: "z-ai/glm-5.3"
+          alias: "glm-5.2"
+          display-name: "GLM 5.3 (nvapi, priority)"
+        - name: "deepseek-ai/deepseek-v4.1-flash"
+          alias: "glm-5.2"
+          display-name: "DeepSeek V4.1 Flash (nvapi)"
+      keys:
+        - api-key: "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"
+          weight: 1
+    - name: "sensenova"
+      base-url: "https://token.sensenova.cn/v1"
+      models:
+        - name: "sensenova-6.8-flash-lite"
+          alias: "glm-5.2"
+          display-name: "SenseNova 6.8 Flash Lite (5key轮询)"
+      keys:
+        - api-key: "sk-rjSWwNOueqYfSxFUEu7fEi1mTjYjvvdQ"
+          weight: 1
+        - api-key: "sk-P4l1zSAGwLif4LnOzAtKhorVej5L1uT4"
+          weight: 1
+        - api-key: "sk-zXAlbixlfWXxXjUWRso9qC1m3DYB4ajk"
+          weight: 1
+        - api-key: "sk-6HqcznSf6agPXoGkh8dRvbFBWuesMxHT"
+          weight: 1
+        - api-key: "sk-IExrpMRrKsXBxxRCo6X62t7oviAWEeIH"
+          weight: 1
+    - name: "agnes"
+      base-url: "https://apihub.agnes-ai.cn/v1"
+      models:
+        - name: "agnes-2.0-flash"
+          alias: "agnes-2.0-flash"
+          display-name: "Agnes 2.0 Flash"
+        - name: "agnes-2.5-flash"
+          alias: "agnes-2.5-flash"
+          display-name: "Agnes 2.5 Flash"
+        - name: "agnes-2.5-pro"
+          alias: "agnes-2.5-pro"
+          display-name: "Agnes 2.5 Pro"
+        - name: "agnes-3.0-flash"
+          alias: "agnes-3.0-flash"
+          display-name: "Agnes 3.0 Flash"
+        - name: "agnes-2.5-flash"
+          alias: "glm-5.2"
+          display-name: "GLM 5.2 (fallback)"
+      keys:
+        - api-key: "sk-gN07qfrBHlXFKcd63PZOr8Dy5eMHDy2TkTrdkgfreTd31B5E"
+          weight: 1
